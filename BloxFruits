@@ -2,21 +2,32 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
-local LocalPlayer = game:GetService("Players").LocalPlayer
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-queueteleport = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
+local VirtualUser = game:GetService("VirtualUser")
+local LocalPlayer = Players.LocalPlayer
+local queueteleport = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport) or function() warn("Queue teleport not supported by this executor") end
+
+local function setupAntiAFK()
+    VirtualUser:CaptureController()
+    VirtualUser:SetKeyDown("w")
+    task.wait(0.1)
+    VirtualUser:SetKeyUp("w")
+end
 
 local function returnHRP()
     if not LocalPlayer.Character then return end
-    if not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-    return LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    return hrp
 end
 
 local function returnHUM()
     if not LocalPlayer.Character then return end
-    if not LocalPlayer.Character:FindFirstChild("Humanoid") then return end
-    return LocalPlayer.Character:FindFirstChild("Humanoid")
+    local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+    if not hum then return end
+    return hum
 end
 
 local function spoofHRP()
@@ -28,44 +39,93 @@ local function spoofHUM()
 end
 
 local function TpTo(CFrame, Refresh)
+    if not CFrame then return false end
     if Refresh then
-        returnHUM().Health = 0
+        local hum = returnHUM()
+        if hum then
+            hum.Health = 0
+        end
         LocalPlayer.CharacterAdded:Wait()
-        repeat
-            task.wait()
-        until returnHRP() and returnHUM()
-        spoofHRP()
-        spoofHUM()
-    else
-        spoofHRP()
+        for _ = 1, 10 do
+            if returnHRP() and returnHUM() then break end
+            task.wait(0.5)
+        end
     end
-    returnHRP().CFrame = CFrame
+    local hrp = returnHRP()
+    if not hrp then return false end
+    spoofHRP()
+    spoofHUM()
+    hrp.CFrame = CFrame
     return true
 end
 
-local function runFruitCollector()
-    repeat
-        task.wait()
-    until game:GetService("Players") and game:GetService("Workspace") and game:GetService("ReplicatedStorage")
-
-    repeat
+local function setTeam()
+    local maxAttempts = 10
+    local attempt = 1
+    while attempt <= maxAttempts do
+        if LocalPlayer.Team and LocalPlayer.Team.Name == "Pirates" then
+            return true
+        end
         local success, result = pcall(function()
             return ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
         end)
-        if not success then
-            warn("Failed to set team: " .. tostring(result))
+        if success and LocalPlayer.Team and LocalPlayer.Team.Name == "Pirates" then
+            print("Successfully set team to Pirates")
+            return true
+        else
+            warn("Team set attempt " .. attempt .. " failed: " .. tostring(result))
+            task.wait(2)
         end
-        task.wait(3)
-    until LocalPlayer.Team == "Pirates"
+        attempt = attempt + 1
+    end
+    warn("Failed to set team after " .. maxAttempts .. " attempts")
+    return false
+end
 
-    repeat
-        task.wait()
-    until returnHRP() and returnHUM()
+local function serverHop()
+    local success, module = pcall(function()
+        return loadstring(game:HttpGet("https://raw.githubusercontent.com/LeoKholYt/roblox/main/lk_serverhop.lua"))()
+    end)
+    if success and module then
+        module:Teleport(game.PlaceId)
+    else
+        warn("Server hop module failed, using fallback")
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+        for _, server in ipairs(servers.data) do
+            if server.id ~= game.JobId then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
+                task.wait(5)
+                break
+            end
+        end
+    end
+end
+
+
+local function runFruitCollector()
+    if not (Players and Workspace and ReplicatedStorage) then
+        warn("Services not loaded")
+        return false
+    end
+
+    if not setTeam() then
+        warn("Could not set team, aborting")
+        return false
+    end
+
+    for _ = 1, 10 do
+        if returnHRP() and returnHUM() then break end
+        task.wait(0.5)
+    end
+    if not (returnHRP() and returnHUM()) then
+        warn("Character not loaded")
+        return false
+    end
 
     local Fruit_InServer = false
     local Fruits_InServer = {}
-    local Fruit_InHand = nil
-
     for _, v in ipairs(Workspace:GetChildren()) do
         if v:IsA("Tool") then
             Fruit_InServer = true
@@ -76,39 +136,38 @@ local function runFruitCollector()
     if Fruit_InServer then
         for _, v in pairs(Fruits_InServer) do
             if returnHRP() and v:IsDescendantOf(Workspace) then
-                TpTo(v.Handle.CFrame, false)
-                task.wait(3)
-                Fruit_InHand = string.gsub(v.Name, " Fruit", "")
-                Fruit_InHand = Fruit_InHand .. "-" .. Fruit_InHand
-                local success, result = pcall(function()
-                    return ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", Fruit_InHand, returnHRP().Parent:FindFirstChildOfClass("Tool"))
-                end)
-                if success then
-                    print("Stored fruit: " .. Fruit_InHand)
-                else
-                    warn("Failed to store fruit: " .. tostring(result))
+                if TpTo(v.Handle.CFrame, false) then
+                    task.wait(2)
+                    local Fruit_InHand = string.gsub(v.Name, " Fruit", "")
+                    Fruit_InHand = Fruit_InHand .. "-" .. Fruit_InHand
+                    local success, result = pcall(function()
+                        return ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", Fruit_InHand, returnHRP().Parent:FindFirstChildOfClass("Tool"))
+                    end)
+                    if success then
+                        print("Stored fruit: " .. Fruit_InHand)
+                    else
+                        warn("Failed to store fruit: " .. tostring(result))
+                    end
+                    task.wait(0.5)
                 end
-                task.wait(0.2)
             end
         end
     end
 
-    task.wait(1)
-    local success, module = pcall(function()
-        return loadstring(game:HttpGet("https://raw.githubusercontent.com/LeoKholYt/roblox/main/lk_serverhop.lua"))()
-    end)
-    if success and module then
-        module:Teleport(game.PlaceId)
-    else
-        warn("Failed to load server hop module. Retrying in 5 seconds...")
-        task.wait(5)
-        return false
-    end
+    task.wait(2)
+    serverHop()
     task.wait(10)
     return true
 end
 
 local function init()
+    task.spawn(function()
+        while true do
+            setupAntiAFK()
+            task.wait(300)
+        end
+    end)
+
     while true do
         local success, result = pcall(runFruitCollector)
         if not success then
@@ -122,8 +181,10 @@ local function init()
     end
 end
 
-init()
-
 LocalPlayer.OnTeleport:Connect(function(state)
-    queueteleport('print("LOADED"); loadstring(game:HttpGet("https://raw.githubusercontent.com/MadbukScripts/Scripts/refs/heads/main/BloxFruits"))()')
+    if queueteleport then
+        queueteleport('print("LOADED"); loadstring(game:HttpGet("https://raw.githubusercontent.com/MadbukScripts/Scripts/refs/heads/main/BloxFruits"))()')
+    end
 end)
+
+init()
