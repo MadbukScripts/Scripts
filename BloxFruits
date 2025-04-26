@@ -83,24 +83,26 @@ local function setTeam()
 end
 
 local function serverHop()
-    local success, module = pcall(function()
-        return loadstring(game:HttpGet("https://raw.githubusercontent.com/LeoKholYt/roblox/main/lk_serverhop.lua"))()
-    end)
-    if success and module then
-        module:Teleport(game.PlaceId)
-    else
-        warn("Server hop module failed, using fallback")
-        local HttpService = game:GetService("HttpService")
-        local TeleportService = game:GetService("TeleportService")
-        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-        for _, server in ipairs(servers.data) do
-            if server.id ~= game.JobId then
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
-                task.wait(5)
-                break
-            end
-        end
-    end
+	for _ = 1, 100 do
+		local success, module = pcall(function()
+			return loadstring(game:HttpGet("https://raw.githubusercontent.com/LeoKholYt/roblox/main/lk_serverhop.lua"))()
+		end)
+		if success and module then
+			module:Teleport(game.PlaceId)
+		else
+			warn("Server hop module failed, using fallback")
+			local HttpService = game:GetService("HttpService")
+			local TeleportService = game:GetService("TeleportService")
+			local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+			for _, server in ipairs(servers.data) do
+				if server.id ~= game.JobId then
+					TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
+					task.wait(5)
+					break
+				end
+			end
+		end
+	end
 end
 
 
