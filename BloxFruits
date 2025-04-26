@@ -125,5 +125,5 @@ end
 init()
 
 LocalPlayer.OnTeleport:Connect(function(state)
-    queueteleport('print("LOADED"); loadstring(game:HttpGet("https://pastebin.com/raw/YQv10kAN"))()')
+    queueteleport('print("LOADED"); loadstring(game:HttpGet("https://raw.githubusercontent.com/MadbukScripts/Scripts/refs/heads/main/BloxFruits"))()')
 end)
