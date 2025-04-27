@@ -85,10 +85,10 @@ end
 local function serverHop()
 	for _ = 1, 100 do
 		local success, module = pcall(function()
-			return loadstring(game:HttpGet("https://raw.githubusercontent.com/LeoKholYt/roblox/main/lk_serverhop.lua"))()
+			return loadstring(game:HttpGet("https://raw.githubusercontent.com/MadbukScripts/Server-Hop/refs/heads/main/Main.lua"))()
 		end)
 		if success and module then
-			module:Teleport(game.PlaceId)
+			module:Teleport(game.PlaceId, 'Desc')
 		else
 			warn("Server hop module failed, using fallback")
 			local HttpService = game:GetService("HttpService")
