@@ -17,6 +17,8 @@ local function sendWebhook(fruit)
 		url = "https://discord.com/api/webhooks/1366051662011039858/r_6tli69HLPEp9R9C4-JXc_BshuVz3ms3W_6OlrO9TM3u594SKYiKUHaZhDIal2xAtbo"
 	elseif game:GetService("Players").LocalPlayer.Name == "jakubob9" then
 		url = "https://discord.com/api/webhooks/1366051619212623895/jTtaTyFwu9WfwePJSbgvPskoR_hB0WnS-k0O2KJvJ2B6yRfj6LPWF3esHEOoPA_QVUZ_"
+	elseif game:GetService("Players").LocalPlayer.Name == "malnoirah" then
+		url = "https://discord.com/api/webhooks/1366112327576850595/KJ3Fq4YknlkUsyksuyZvg-qBiArp5dcAV72sYNHW9ugsy_GToutqOEWQ6OJ3OVm3pvZL"
 	end
 
 	local response = request({
