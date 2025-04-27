@@ -6,8 +6,43 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local VirtualUser = game:GetService("VirtualUser")
+local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local queueteleport = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport) or function() warn("Queue teleport not supported by this executor") end
+
+local function sendWebhook(fruit)
+	local url;
+
+	if game:GetService("Players").LocalPlayer.Name == "CyberSalmon123" then
+		url = "https://discord.com/api/webhooks/1366051662011039858/r_6tli69HLPEp9R9C4-JXc_BshuVz3ms3W_6OlrO9TM3u594SKYiKUHaZhDIal2xAtbo"
+	elseif game:GetService("Players").LocalPlayer.Name == "jakubob9" then
+		url = "https://discord.com/api/webhooks/1366051619212623895/jTtaTyFwu9WfwePJSbgvPskoR_hB0WnS-k0O2KJvJ2B6yRfj6LPWF3esHEOoPA_QVUZ_"
+	end
+
+	local response = request({
+		Url = url,
+		Method = 'POST',
+		Headers = {
+			['Content-Type'] = 'application/json'
+		},
+		Body = HttpService:JSONEncode({
+			["content"] = "",
+			["embeds"] = {{
+				["title"] = "**FRUIT COLLECTED**",
+				["description"] = game.Players.LocalPlayer.DisplayName.." (@"..game.Players.LocalPlayer.Name..")",
+				["type"] = "rich",
+				["color"] = 16711782,
+				["fields"] = {
+					{
+						["name"] = "**FRUIT**",
+						["value"] = fruit,
+						["inline"] = true
+					},
+				}
+			}}
+		})
+	})
+end
 
 local function setupAntiAFK()
     VirtualUser:CaptureController()
@@ -91,7 +126,6 @@ local function serverHop()
 			module:Teleport(game.PlaceId, 'Desc')
 		else
 			warn("Server hop module failed, using fallback")
-			local HttpService = game:GetService("HttpService")
 			local TeleportService = game:GetService("TeleportService")
 			local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
 			for _, server in ipairs(servers.data) do
@@ -146,6 +180,7 @@ local function runFruitCollector()
                         return ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", Fruit_InHand, returnHRP().Parent:FindFirstChildOfClass("Tool"))
                     end)
                     if success then
+						sendWebhook(Fruit_InHand)
                         print("Stored fruit: " .. Fruit_InHand)
                     else
                         warn("Failed to store fruit: " .. tostring(result))
