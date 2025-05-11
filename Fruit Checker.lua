@@ -182,7 +182,7 @@ local s, e = pcall(function()
             elseif modifier == "Moonlit" then return Color3.fromRGB(173, 216, 230)
             elseif variant == "Gold" then return Color3.fromRGB(255, 255, 0)
             elseif variant == "Rainbow" then return Color3.fromRGB(0, 255, 255)
-            else return Color3.fromRGB(255, 255, 255)
+            else return Color3.fromRGB(255, 255, 255) end
         else
             return Color3.fromRGB(255, 255, 255)
         end
