@@ -175,15 +175,14 @@ local s, e = pcall(function()
     local gfruitLabels = {}
     local w_v = {"Gold", "Rainbow"}
     local w_m = {"Shocked", "Moonlit"}
+	local m = game:GetService("ReplicatedStorage").Mutation_FX:GetChildren()
 
     local function getItemColor(category, key)
         if category == "gfruits" then
-            local variant, modifier = key:match("^(%S+)%s*(%S*)%s*.*$")
-            modifier = modifier or ""
-            if modifier == "Shocked" then return Color3.fromRGB(20, 250, 20)
-            elseif modifier == "Moonlit" then return Color3.fromRGB(173, 216, 230)
-            elseif variant == "Gold" then return Color3.fromRGB(255, 255, 0)
-            elseif variant == "Rainbow" then return Color3.fromRGB(0, 255, 255)
+			if key:match("Gold") then return Color3.fromRGB(255, 255, 0)
+            elseif key:match("Rainbow") then return Color3.fromRGB(0, 255, 255)
+			elseif key:match("Moonlit") then return Color3.fromRGB(173, 216, 230)
+            elseif key:match("Shocked") then return Color3.fromRGB(20, 250, 20)
             else return Color3.fromRGB(255, 255, 255) end
         else
             return Color3.fromRGB(255, 255, 255)
@@ -231,15 +230,18 @@ local s, e = pcall(function()
                     local variant = fruit.Variant.Value
                     local isSpecial = table.find(w_v, variant)
                     local modifier = ""
-                    for _, attr in ipairs(w_m) do
-                        if fruit:GetAttribute(attr) == true then
-                            isSpecial = true
-                            modifier = attr
-                            break
-                        end
-                    end
+					for _, attr in ipairs(m) do
+						if fruit:GetAttribute(attr.Name) then
+							modifier = modifier..' '..attr.Name
+						end
+						if table.find(w_m, attr.Name) then
+							if fruit:GetAttribute(attr.Name) then
+								isSpecial = true
+							end
+						end
+					end
                     if isSpecial then
-						if modifier == "Moonlit" then
+						if modifier:match("Moonlit") then
 							if not fruit:FindFirstChildWhichIsA("Highlight", true) then
 								local highlight = Instance.new("Highlight")
 								highlight.Parent = fruit
@@ -308,15 +310,18 @@ local s, e = pcall(function()
             local variant = fruit.Variant.Value
             local isSpecial = table.find(w_v, variant)
             local modifier = ""
-            for _, attr in ipairs(w_m) do
-                if fruit:GetAttribute(attr) == true then
-                    isSpecial = true
-                    modifier = attr
-                    break
+            for _, attr in ipairs(m) do
+                if fruit:GetAttribute(attr.Name) then
+                    modifier = modifier..' '..attr.Name
                 end
+				if table.find(w_m, attr.Name) then
+					if fruit:GetAttribute(attr.Name) then
+						isSpecial = true
+					end
+				end
             end
             if isSpecial then
-						if modifier == "Moonlit" then
+						if modifier:match("Moonlit") then
 							if not fruit:FindFirstChildWhichIsA("Highlight", true) then
 								local highlight = Instance.new("Highlight")
 								highlight.Parent = fruit
