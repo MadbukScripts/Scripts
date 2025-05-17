@@ -3,8 +3,6 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player.PlayerGui
 
-player.PlayerGui.CallAllPets.Enabled = true
-
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FruitTrackerGui"
 screenGui.Parent = playerGui
