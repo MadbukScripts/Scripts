@@ -3,6 +3,19 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player.PlayerGui
 
+for i,v in next, game:GetService("ReplicatedStorage").Mutation_FX:GetChildren() do
+	if v.Name == "Disco" or v.Name == "Zombified" then
+		v:Destroy()
+	end
+end
+
+task.wait(0.5)
+
+local c = Instance.new("Part", game:GetService("ReplicatedStorage").Mutation_FX)
+c.Name = "Disco"
+local c = Instance.new("Part", game:GetService("ReplicatedStorage").Mutation_FX)
+c.Name = "Zombified"
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FruitTrackerGui"
 screenGui.Parent = playerGui
@@ -172,13 +185,17 @@ local s, e = pcall(function()
     local fruitLabels = {}
     local gfruitLabels = {}
     local w_v = {"Gold", "Rainbow"}
-    local w_m = {"Shocked", "Moonlit"}
+    local w_m = {"Shocked", "Moonlit", "Bloodlit", "Disco", "Zombified"}
 	local m = game:GetService("ReplicatedStorage").Mutation_FX:GetChildren()
+	
 
     local function getItemColor(category, key)
         if category == "gfruits" then
-			if key:match("Gold") then return Color3.fromRGB(255, 255, 0)
+			if key:match("Disco") then return Color3.fromRGB(255, 100, 255)
+			elseif key:match("Zombified") then return Color3.fromRGB(0, 255, 0)
+			elseif key:match("Gold") then return Color3.fromRGB(255, 255, 0)
             elseif key:match("Rainbow") then return Color3.fromRGB(0, 255, 255)
+			elseif key:match("Bloodlit") then return Color3.fromRGB(255, 0, 0)
 			elseif key:match("Moonlit") then return Color3.fromRGB(173, 216, 230)
             elseif key:match("Shocked") then return Color3.fromRGB(20, 250, 20)
             else return Color3.fromRGB(255, 255, 255) end
@@ -239,12 +256,13 @@ local s, e = pcall(function()
 						end
 					end
                     if isSpecial then
-						if modifier:match("Moonlit") then
+						if modifier:match("Moonlit") or modifier:match("Bloodlit") then
 							if not fruit:FindFirstChildWhichIsA("Highlight", true) then
 								local highlight = Instance.new("Highlight")
 								highlight.Parent = fruit
 							end
 						end
+						-- local weight = string.format('%.2f', fruit.Weight.Value)..'kg'
                         local key = table.concat({variant, modifier, fruit.Name}, " "):gsub("%s+", " ")
                         newGfruits[key] = (newGfruits[key] or 0) + 1
                     end
@@ -287,9 +305,15 @@ local s, e = pcall(function()
             end
         end
         gfruits = newGfruits
+		return gfruits
     end
 
-    scanFarm()
+    local g = scanFarm()
+	local bg = ''
+	for i,v in next, g do
+		bg = bg..'\n'..i..' '..v
+	end
+	writefile("goodstuff"..playerFarm.Important.Data.Owner.Value..'.txt', bg)
 
     for _, plant in ipairs(playerFarm.Important["Plants_Physical"]:GetChildren()) do
         if plant:FindFirstChild("Fruits") then
@@ -319,7 +343,7 @@ local s, e = pcall(function()
 				end
             end
             if isSpecial then
-						if modifier:match("Moonlit") then
+						if modifier:match("Moonlit") or modifier:match("Bloodlit") then
 							if not fruit:FindFirstChildWhichIsA("Highlight", true) then
 								local highlight = Instance.new("Highlight")
 								highlight.Parent = fruit
